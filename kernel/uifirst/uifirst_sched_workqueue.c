@@ -18,26 +18,26 @@ int is_uxwork(struct work_struct *work)
 	return work->ux_work;
 }
 
-inline int set_uxwork(struct work_struct *work)
+int set_uxwork(struct work_struct *work)
 {
 	if(!sysctl_uifirst_enabled)
 		return false;
 	return work->ux_work = 1;
 }
 
-inline int unset_uxwork(struct work_struct *work)
+int unset_uxwork(struct work_struct *work)
 {
 	if(!sysctl_uifirst_enabled)
 		return false;
 	return work->ux_work = 0;
 }
 
-inline void set_ux_worker_task(struct task_struct *task)
+void set_ux_worker_task(struct task_struct *task)
 {
 	task->static_ux = 1;
 }
 
-inline void reset_ux_worker_task(struct task_struct *task)
+void reset_ux_worker_task(struct task_struct *task)
 {
 	task->static_ux = 0;
 }
