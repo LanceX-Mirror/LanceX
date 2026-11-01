@@ -52,11 +52,11 @@ struct dma_fence_array {
 extern const struct dma_fence_ops dma_fence_array_ops;
 
 /**
- * fence_is_array - check if a fence is from the array subsclass
+ * dma_fence_is_array - check if a fence is from the array subsclass
  *
  * Return true if it is a dma_fence_array and false otherwise.
  */
-static inline bool fence_is_array(struct dma_fence *fence)
+static inline bool dma_fence_is_array(struct dma_fence *fence)
 {
 	return fence->ops == &dma_fence_array_ops;
 }

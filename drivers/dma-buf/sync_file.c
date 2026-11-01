@@ -165,8 +165,8 @@ static int sync_file_set_fence(struct sync_file *sync_file,
 
 static struct dma_fence **get_fences(struct sync_file *sync_file, int *num_fences)
 {
-	if (fence_is_array(sync_file->fence)) {
-		struct dma_fence_array *array = to_fence_array(sync_file->fence);
+	if (dma_fence_is_array(sync_file->fence)) {
+		struct dma_fence_array *array = to_dma_fence_array(sync_file->fence);
 
 		*num_fences = array->num_fences;
 		return array->fences;
