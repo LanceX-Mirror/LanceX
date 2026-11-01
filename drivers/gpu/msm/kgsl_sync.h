@@ -15,6 +15,7 @@
 #define __KGSL_SYNC_H
 
 #include <linux/sync_file.h>
+#include <linux/dma-fence.h>
 #include "kgsl_device.h"
 
 #define KGSL_TIMELINE_NAME_LEN 32
@@ -56,7 +57,7 @@ struct kgsl_sync_timeline {
  * @timestamp: Context timestamp that this fence is associated with
  */
 struct kgsl_sync_fence {
-	struct fence fence;
+	struct dma_fence fence;
 	struct sync_file *sync_file;
 	struct kgsl_sync_timeline *parent;
 	struct list_head child_list;
@@ -66,15 +67,15 @@ struct kgsl_sync_fence {
 
 /**
  * struct kgsl_sync_fence_cb - Used for fence callbacks
- * fence_cb: Fence callback struct
+ * dma_fence_cb: Fence callback struct
  * fence: Pointer to the fence for which the callback is done
  * priv: Private data for the callback
  * func: Pointer to the kgsl function to call. This function should return
  * false if the sync callback is marked for cancellation in a separate thread.
  */
 struct kgsl_sync_fence_cb {
-	struct fence_cb fence_cb;
-	struct fence *fence;
+	struct dma_fence_cb dma_fence_cb;
+	struct dma_fence *fence;
 	void *priv;
 	bool (*func)(void *priv);
 };

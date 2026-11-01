@@ -167,7 +167,7 @@ void sde_debugfs_timeline_dump(struct sde_fence_context *ctx,
  * @fence: Pointer fence container
  * @s: used to writing on debugfs node
  */
-void sde_fence_list_dump(struct fence *fence, struct seq_file **s);
+void sde_fence_list_dump(struct dma_fence *fence, struct seq_file **s);
 
 #else
 static inline void *sde_sync_get(uint64_t fd)
@@ -235,7 +235,7 @@ void sde_debugfs_timeline_dump(struct sde_fence_context *ctx,
 	/* do nothing */
 }
 
-void sde_fence_list_dump(struct fence *fence, struct seq_file **s)
+void sde_fence_list_dump(struct dma_fence *fence, struct seq_file **s)
 {
 	/* do nothing */
 }

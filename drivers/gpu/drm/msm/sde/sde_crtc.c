@@ -6364,7 +6364,7 @@ static int _sde_debugfs_fence_status_show(struct seq_file *s, void *data)
 	seq_puts(s, "===Input fence===\n");
 	drm_atomic_crtc_for_each_plane(plane, crtc) {
 		struct sde_plane_state *pstate;
-		struct fence *fence;
+		struct dma_fence *fence;
 
 		pstate = to_sde_plane_state(plane->state);
 		if (!pstate)

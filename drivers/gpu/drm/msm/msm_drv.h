@@ -36,6 +36,7 @@
 #include <linux/sde_io_util.h>
 #include <asm/sizes.h>
 #include <linux/kthread.h>
+#include <linux/dma-fence.h>
 
 #include <drm/drmP.h>
 #include <drm/drm_atomic.h>
@@ -786,7 +787,7 @@ void msm_gem_vunmap(struct drm_gem_object *obj);
 int msm_gem_sync_object(struct drm_gem_object *obj,
 		struct msm_fence_context *fctx, bool exclusive);
 void msm_gem_move_to_active(struct drm_gem_object *obj,
-		struct msm_gpu *gpu, bool exclusive, struct fence *fence);
+		struct msm_gpu *gpu, bool exclusive, struct dma_fence *fence);
 void msm_gem_move_to_inactive(struct drm_gem_object *obj);
 int msm_gem_cpu_prep(struct drm_gem_object *obj, uint32_t op, ktime_t *timeout);
 int msm_gem_cpu_fini(struct drm_gem_object *obj);

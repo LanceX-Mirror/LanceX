@@ -1215,10 +1215,10 @@ EXPORT_SYMBOL(drm_atomic_set_fb_for_plane);
  */
 void
 drm_atomic_set_fence_for_plane(struct drm_plane_state *plane_state,
-			       struct fence *fence)
+			       struct dma_fence *fence)
 {
 	if (plane_state->fence) {
-		fence_put(fence);
+		dma_fence_put(fence);
 		return;
 	}
 
@@ -1682,7 +1682,7 @@ EXPORT_SYMBOL(drm_atomic_clean_old_fb);
  *	proceeding with the Atomic Commit request and show the framebuffer for
  *	the plane on the screen. The fence can be either a normal fence or a
  *	merged one, the sync_file framework will handle both cases and use a
- *	fence_array if a merged fence is received. Passing -1 here means no
+ *	dma_fence_array if a merged fence is received. Passing -1 here means no
  *	fences to wait on.
  *
  *	If the Atomic Commit request has the DRM_MODE_ATOMIC_TEST_ONLY flag
@@ -1720,7 +1720,7 @@ struct drm_out_fence_state {
 };
 
 static int setup_out_fence(struct drm_out_fence_state *fence_state,
-			   struct fence *fence)
+			   struct dma_fence *fence)
 {
 	fence_state->fd = get_unused_fd_flags(O_CLOEXEC);
 	if (fence_state->fd < 0)
@@ -1781,7 +1781,7 @@ static int prepare_crtc_signaling(struct drm_device *dev,
 		}
 
 		if (fence_ptr) {
-			struct fence *fence;
+			struct dma_fence *fence;
 			struct drm_out_fence_state *f;
 
 			f = krealloc(*fence_state, sizeof(**fence_state) *
@@ -1800,7 +1800,7 @@ static int prepare_crtc_signaling(struct drm_device *dev,
 
 			ret = setup_out_fence(&f[(*num_fences)++], fence);
 			if (ret) {
-				fence_put(fence);
+				dma_fence_put(fence);
 				return ret;
 			}
 
