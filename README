@@ -1,3 +1,12 @@
+LanceX — Linux 4.10 API port
+============================
+
+This tree is the Qualcomm/OPPO downstream 4.9.337 kernel with selected
+Linux 4.10 API surfaces ported in.  It reports 4.10.17-lancex; it is not
+a v4.10 source tree.
+
+The text below is the unmodified upstream README.
+
         Linux kernel release 4.x <http://kernel.org/>
 
 These are the release notes for Linux version 4.  Read them carefully,
