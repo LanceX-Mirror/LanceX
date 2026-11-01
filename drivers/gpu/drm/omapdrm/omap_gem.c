@@ -396,7 +396,7 @@ static int fault_1d(struct drm_gem_object *obj,
 	pgoff_t pgoff;
 
 	/* We don't use vmf->pgoff since that has the fake offset: */
-	pgoff = ((unsigned long)vmf->virtual_address -
+	pgoff = (vmf->address -
 			vma->vm_start) >> PAGE_SHIFT;
 
 	if (omap_obj->pages) {
@@ -407,10 +407,10 @@ static int fault_1d(struct drm_gem_object *obj,
 		pfn = (omap_obj->paddr >> PAGE_SHIFT) + pgoff;
 	}
 
-	VERB("Inserting %p pfn %lx, pa %lx", vmf->virtual_address,
+	VERB("Inserting %p pfn %lx, pa %lx", (void __user *)vmf->address,
 			pfn, pfn << PAGE_SHIFT);
 
-	return vm_insert_mixed(vma, (unsigned long)vmf->virtual_address,
+	return vm_insert_mixed(vma, vmf->address,
 			__pfn_to_pfn_t(pfn, PFN_DEV));
 }
 
@@ -445,7 +445,7 @@ static int fault_2d(struct drm_gem_object *obj,
 	const int m = DIV_ROUND_UP(omap_obj->width << fmt, PAGE_SIZE);
 
 	/* We don't use vmf->pgoff since that has the fake offset: */
-	pgoff = ((unsigned long)vmf->virtual_address -
+	pgoff = (vmf->address -
 			vma->vm_start) >> PAGE_SHIFT;
 
 	/*
@@ -457,7 +457,7 @@ static int fault_2d(struct drm_gem_object *obj,
 	/* figure out buffer width in slots */
 	slots = omap_obj->width >> priv->usergart[fmt].slot_shift;
 
-	vaddr = vmf->virtual_address - ((pgoff - base_pgoff) << PAGE_SHIFT);
+	vaddr = (void __user *)vmf->address - ((pgoff - base_pgoff) << PAGE_SHIFT);
 
 	entry = &priv->usergart[fmt].entry[priv->usergart[fmt].last];
 
@@ -501,7 +501,7 @@ static int fault_2d(struct drm_gem_object *obj,
 
 	pfn = entry->paddr >> PAGE_SHIFT;
 
-	VERB("Inserting %p pfn %lx, pa %lx", vmf->virtual_address,
+	VERB("Inserting %p pfn %lx, pa %lx", (void __user *)vmf->address,
 			pfn, pfn << PAGE_SHIFT);
 
 	for (i = n; i > 0; i--) {

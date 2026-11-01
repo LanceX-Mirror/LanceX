@@ -336,7 +336,7 @@ struct vm_fault {
 	unsigned int flags;		/* FAULT_FLAG_xxx flags */
 	gfp_t gfp_mask;			/* gfp mask to be used for allocations */
 	pgoff_t pgoff;			/* Logical page offset based on vma */
-	void __user *virtual_address;	/* Faulting virtual address */
+	unsigned long address;          /* Faulting virtual address */
 	struct page *cow_page;		/* Handler may choose to COW */
 	struct page *page;		/* ->fault handlers should return a
 					 * page here, unless VM_FAULT_NOPAGE
