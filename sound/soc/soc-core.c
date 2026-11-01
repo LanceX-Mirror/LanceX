@@ -1725,7 +1725,7 @@ static int soc_bind_aux_dev(struct snd_soc_card *card, int num)
 	}
 
 	component->init = aux_dev->init;
-	list_add(&component->list_aux, &card->aux_comp_list);
+	list_add(&component->card_aux_list, &card->aux_comp_list);
 	return 0;
 
 err_defer:
@@ -1741,7 +1741,7 @@ static int soc_probe_aux_devices(struct snd_soc_card *card)
 
 	for (order = SND_SOC_COMP_ORDER_FIRST; order <= SND_SOC_COMP_ORDER_LAST;
 		order++) {
-		list_for_each_entry(comp, &card->aux_comp_list, list_aux) {
+		list_for_each_entry(comp, &card->aux_comp_list, card_aux_list) {
 			if (comp->driver->probe_order == order) {
 				ret = soc_probe_component(card,	comp);
 				if (ret < 0) {
@@ -1765,11 +1765,11 @@ static void soc_remove_aux_devices(struct snd_soc_card *card)
 	for (order = SND_SOC_COMP_ORDER_FIRST; order <= SND_SOC_COMP_ORDER_LAST;
 		order++) {
 		list_for_each_entry_safe(comp, _comp,
-			&card->aux_comp_list, list_aux) {
+			&card->aux_comp_list, card_aux_list) {
 			if (comp->driver->remove_order == order) {
 				soc_remove_component(comp);
 				/* remove it from the card's aux_comp_list */
-				list_del(&comp->list_aux);
+				list_del(&comp->card_aux_list);
 			}
 		}
 	}

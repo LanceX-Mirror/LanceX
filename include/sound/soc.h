@@ -824,7 +824,7 @@ struct snd_soc_component {
 	unsigned int registered_as_component:1;
 
 	struct list_head list;
-	struct list_head list_aux; /* for auxiliary component of the card */
+	struct list_head card_aux_list; /* for auxiliary component of the card */
 
 	struct snd_soc_dai_driver *dai_drv;
 	int num_dai;
