@@ -2253,7 +2253,6 @@ static int _sde_kms_remove_fbs(struct sde_kms *sde_kms, struct drm_file *file,
 
 	if (list_empty(&fbs)) {
 		SDE_DEBUG("skip commit as no fb(s)\n");
-		drm_atomic_state_free(state);
 		return 0;
 	}
 
@@ -2316,8 +2315,8 @@ static void sde_kms_preclose(struct msm_kms *kms, struct drm_file *file)
 	}
 
 end:
-	if ((ret != 0) && state)
-		drm_atomic_state_free(state);
+	if (state)
+		drm_atomic_state_put(state);
 
 	SDE_DEBUG("sde preclose done, ret:%d\n", ret);
 	drm_modeset_unlock_all(dev);
@@ -2426,14 +2425,10 @@ static void sde_kms_lastclose(struct msm_kms *kms)
 		SDE_DEBUG("deadlock backoff on attempt %d\n", i);
 	}
 
-	if (ret) {
-		/**
-		 * on success, atomic state object ownership transfers to
-		 * framework, otherwise, free it here
-		 */
-		drm_atomic_state_free(state);
+	if (ret)
 		SDE_ERROR("failed to run last close: %d\n", ret);
-	}
+
+	drm_atomic_state_put(state);
 }
 
 static int sde_kms_check_secure_transition(struct msm_kms *kms,
@@ -2825,7 +2820,7 @@ retry:
 		SDE_ERROR("Commit failed with %d error\n", ret);
 end:
 	if (state)
-		drm_atomic_state_free(state);
+		drm_atomic_state_put(state);
 
 	drm_modeset_drop_locks(&ctx);
 	drm_modeset_acquire_fini(&ctx);
@@ -2870,7 +2865,7 @@ retry:
 
 	/* save current state for resume */
 	if (sde_kms->suspend_state)
-		drm_atomic_state_free(sde_kms->suspend_state);
+		drm_atomic_state_put(sde_kms->suspend_state);
 	sde_kms->suspend_state = drm_atomic_helper_duplicate_state(ddev, &ctx);
 	if (IS_ERR_OR_NULL(sde_kms->suspend_state)) {
 		DRM_ERROR("failed to back up suspend state\n");
@@ -2902,7 +2897,7 @@ retry:
 			if (ret) {
 				DRM_ERROR("failed to set lp2 for conn %d\n",
 						conn->base.id);
-				drm_atomic_state_free(state);
+				drm_atomic_state_put(state);
 				goto unlock;
 			}
 		}
@@ -2914,7 +2909,7 @@ retry:
 			if (IS_ERR_OR_NULL(crtc_state)) {
 				DRM_ERROR("failed to get crtc %d state\n",
 						conn->state->crtc->base.id);
-				drm_atomic_state_free(state);
+				drm_atomic_state_put(state);
 				goto unlock;
 			}
 
@@ -2927,7 +2922,7 @@ retry:
 	/* check for nothing to do */
 	if (num_crtcs == 0) {
 		DRM_DEBUG("all crtcs are already in the off state\n");
-		drm_atomic_state_free(state);
+		drm_atomic_state_put(state);
 		sde_kms->suspend_block = true;
 		goto unlock;
 	}
@@ -2936,9 +2931,11 @@ retry:
 	ret = drm_atomic_commit(state);
 	if (ret < 0) {
 		DRM_ERROR("failed to disable crtcs, %d\n", ret);
-		drm_atomic_state_free(state);
+		drm_atomic_state_put(state);
 		goto unlock;
 	}
+
+	drm_atomic_state_put(state);
 
 	sde_kms->suspend_block = true;
 
@@ -2996,10 +2993,9 @@ static int sde_kms_pm_resume(struct device *dev)
 		sde_kms->suspend_state->acquire_ctx =
 			ddev->mode_config.acquire_ctx;
 		ret = drm_atomic_commit(sde_kms->suspend_state);
-		if (ret < 0) {
+		if (ret < 0)
 			DRM_ERROR("failed to restore state, %d\n", ret);
-			drm_atomic_state_free(sde_kms->suspend_state);
-		}
+		drm_atomic_state_put(sde_kms->suspend_state);
 		sde_kms->suspend_state = NULL;
 	}
 	drm_modeset_unlock_all(ddev);

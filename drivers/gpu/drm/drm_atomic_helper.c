@@ -1203,7 +1203,7 @@ static void commit_tail(struct drm_atomic_state *state)
 
 	drm_atomic_helper_commit_cleanup_done(state);
 
-	drm_atomic_state_free(state);
+	drm_atomic_state_put(state);
 }
 
 static void commit_work(struct work_struct *work)
@@ -1286,6 +1286,8 @@ int drm_atomic_helper_commit(struct drm_device *dev,
 	 * cleanup. We want them to overlap, hence need system_unbound_wq to
 	 * make sure work items don't artifically stall on each another.
 	 */
+
+	drm_atomic_state_get(state);
 
 	if (nonblock)
 		queue_work(system_unbound_wq, &state->commit_work);
@@ -1599,7 +1601,7 @@ EXPORT_SYMBOL(drm_atomic_helper_commit_hw_done);
  *
  * This signals completion of the atomic update @state, including any cleanup
  * work. If used, it must be called right before calling
- * drm_atomic_state_free().
+ * drm_atomic_state_put().
  *
  * This is part of the atomic helper support for nonblocking commits, see
  * drm_atomic_helper_setup_commit() for an overview.
@@ -2131,7 +2133,7 @@ fail:
 	if (ret == -EDEADLK)
 		goto backoff;
 
-	drm_atomic_state_free(state);
+	drm_atomic_state_put(state);
 
 	return ret;
 backoff:
@@ -2204,7 +2206,7 @@ fail:
 	if (ret == -EDEADLK)
 		goto backoff;
 
-	drm_atomic_state_free(state);
+	drm_atomic_state_put(state);
 
 	return ret;
 backoff:
@@ -2344,7 +2346,7 @@ fail:
 	if (ret == -EDEADLK)
 		goto backoff;
 
-	drm_atomic_state_free(state);
+	drm_atomic_state_put(state);
 
 	return ret;
 backoff:
@@ -2490,8 +2492,7 @@ int drm_atomic_helper_disable_all(struct drm_device *dev,
 	err = drm_atomic_commit(state);
 
 free:
-	if (err < 0)
-		drm_atomic_state_free(state);
+	drm_atomic_state_put(state);
 
 	return err;
 }
@@ -2543,7 +2544,7 @@ retry:
 
 	err = drm_atomic_helper_disable_all(dev, &ctx);
 	if (err < 0) {
-		drm_atomic_state_free(state);
+		drm_atomic_state_put(state);
 		state = ERR_PTR(err);
 		goto unlock;
 	}
@@ -2641,7 +2642,7 @@ fail:
 	if (ret == -EDEADLK)
 		goto backoff;
 
-	drm_atomic_state_free(state);
+	drm_atomic_state_put(state);
 
 	return ret;
 backoff:
@@ -2701,7 +2702,7 @@ fail:
 	if (ret == -EDEADLK)
 		goto backoff;
 
-	drm_atomic_state_free(state);
+	drm_atomic_state_put(state);
 
 	return ret;
 backoff:
@@ -2761,7 +2762,7 @@ fail:
 	if (ret == -EDEADLK)
 		goto backoff;
 
-	drm_atomic_state_free(state);
+	drm_atomic_state_put(state);
 
 	return ret;
 backoff:
@@ -2845,7 +2846,7 @@ fail:
 	if (ret == -EDEADLK)
 		goto backoff;
 
-	drm_atomic_state_free(state);
+	drm_atomic_state_put(state);
 
 	return ret;
 backoff:
@@ -2933,7 +2934,7 @@ fail:
 		goto backoff;
 
 	connector->dpms = old_mode;
-	drm_atomic_state_free(state);
+	drm_atomic_state_put(state);
 
 	return ret;
 backoff:
@@ -3347,7 +3348,7 @@ drm_atomic_helper_duplicate_state(struct drm_device *dev,
 
 free:
 	if (err < 0) {
-		drm_atomic_state_free(state);
+		drm_atomic_state_put(state);
 		state = ERR_PTR(err);
 	}
 
@@ -3474,7 +3475,7 @@ fail:
 	if (ret == -EDEADLK)
 		goto backoff;
 
-	drm_atomic_state_free(state);
+	drm_atomic_state_put(state);
 	drm_property_unreference_blob(blob);
 
 	return ret;

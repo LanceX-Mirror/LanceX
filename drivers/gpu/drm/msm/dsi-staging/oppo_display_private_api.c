@@ -2488,7 +2488,8 @@ static ssize_t oppo_display_notify_fp_press(struct device *dev,
 
 	err = drm_atomic_commit(state);
 	if (err < 0)
-		drm_atomic_state_free(state);
+		pr_err("failed to commit atomic state %d\n", err);
+	drm_atomic_state_put(state);
 
 	drm_modeset_unlock_all(drm_dev);
 	if (!vblank_get)

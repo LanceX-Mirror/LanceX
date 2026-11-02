@@ -220,16 +220,26 @@ void msm_property_install_rotation(struct msm_property_info *info,
 	if (property_idx >= info->property_count) {
 		DRM_ERROR("invalid property index %d\n", property_idx);
 	} else {
+		bool attached = false;
+
 		prop = &info->property_array[property_idx];
 		/*
 		 * Properties need to be attached to each drm object that
 		 * uses them, but only need to be created once
 		 */
 		if (*prop == 0) {
-			*prop = drm_mode_create_rotation_property(info->dev,
-					supported_rotations);
-			if (*prop == 0)
+			struct drm_plane *plane =
+				container_of(info->base, struct drm_plane, base);
+			int ret;
+
+			ret = drm_plane_create_rotation_property(plane,
+					DRM_ROTATE_0, supported_rotations);
+			if (ret) {
 				DRM_ERROR("create rotation property failed\n");
+			} else {
+				*prop = plane->rotation_property;
+				attached = true;
+			}
 		}
 
 		/* save init value for later */
@@ -238,7 +248,8 @@ void msm_property_install_rotation(struct msm_property_info *info,
 
 		/* always attach property, if created */
 		if (*prop) {
-			drm_object_attach_property(info->base, *prop, 0);
+			if (!attached)
+				drm_object_attach_property(info->base, *prop, 0);
 			++info->install_count;
 		}
 	}

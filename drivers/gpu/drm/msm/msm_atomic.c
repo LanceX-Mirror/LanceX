@@ -592,7 +592,7 @@ static void complete_commit(struct msm_commit *c)
 
 	kms->funcs->complete_commit(kms, state);
 
-	drm_atomic_state_free(state);
+	drm_atomic_state_put(state);
 
 	commit_destroy(c);
 }
@@ -801,6 +801,8 @@ retry:
 	 * composition of the next frame right after having submitted the
 	 * current layout.
 	 */
+
+	drm_atomic_state_get(state);
 
 	msm_atomic_commit_dispatch(dev, state, c);
 	SDE_ATRACE_END("atomic_commit");
