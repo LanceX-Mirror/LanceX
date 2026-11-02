@@ -38,17 +38,17 @@
 
 void page_writeback_init(void);
 
-int do_swap_page(struct fault_env *fe, pte_t orig_pte);
+int do_swap_page(struct vm_fault *vmf, pte_t orig_pte);
 
 #ifdef CONFIG_SPECULATIVE_PAGE_FAULT
 extern struct vm_area_struct *get_vma(struct mm_struct *mm,
 				      unsigned long addr);
 extern void put_vma(struct vm_area_struct *vma);
 
-static inline bool vma_has_changed(struct fault_env *fe)
+static inline bool vma_has_changed(struct vm_fault *vmf)
 {
-	int ret = RB_EMPTY_NODE(&fe->vma->vm_rb);
-	unsigned int seq = READ_ONCE(fe->vma->vm_sequence.sequence);
+	int ret = RB_EMPTY_NODE(&vmf->vma->vm_rb);
+	unsigned int seq = READ_ONCE(vmf->vma->vm_sequence.sequence);
 
 	/*
 	 * Matches both the wmb in write_seqlock_{begin,end}() and
@@ -56,7 +56,7 @@ static inline bool vma_has_changed(struct fault_env *fe)
 	 */
 	smp_rmb();
 
-	return ret || seq != fe->sequence;
+	return ret || seq != vmf->sequence;
 }
 #endif /* CONFIG_SPECULATIVE_PAGE_FAULT */
 

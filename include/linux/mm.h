@@ -333,11 +333,18 @@ extern pgprot_t protection_map[16];
  * pgoff should be used in favour of virtual_address, if possible.
  */
 struct vm_fault {
+	struct vm_area_struct *vma;	/* Target VMA */
 	unsigned int flags;		/* FAULT_FLAG_xxx flags */
 	gfp_t gfp_mask;			/* gfp mask to be used for allocations */
 	pgoff_t pgoff;			/* Logical page offset based on vma */
-	unsigned long address;          /* Faulting virtual address */
-	struct page *cow_page;		/* Handler may choose to COW */
+	unsigned long address;		/* Faulting virtual address */
+	unsigned long fault_address;	/* Saved faulting virtual address */
+	pmd_t *pmd;			/* Pointer to pmd entry matching
+					 * the 'address'
+					 */
+	pte_t orig_pte;			/* Value of PTE at the time of fault */
+	struct page *cow_page;		/* Page handler may use for COW fault */
+	struct mem_cgroup *memcg;	/* Cgroup cow_page belongs to */
 	struct page *page;		/* ->fault handlers should return a
 					 * page here, unless VM_FAULT_NOPAGE
 					 * is set (which is also implied by
@@ -349,20 +356,7 @@ struct vm_fault {
 					 * VM_FAULT_DAX_LOCKED and fill in
 					 * entry here.
 					 */
-};
-
-/*
- * Page fault context: passes though page fault handler instead of endless list
- * of function arguments.
- */
-struct fault_env {
-	struct vm_area_struct *vma;	/* Target VMA */
-	unsigned long address;		/* Faulting virtual address */
-	unsigned long fault_address;    /* Saved faulting virtual address */
-	unsigned int flags;		/* FAULT_FLAG_xxx flags */
-	pmd_t *pmd;			/* Pointer to pmd entry matching
-					 * the 'address'
-					 */
+	/* These three entries are valid only while holding ptl lock */
 	pte_t *pte;			/* Pointer to pte entry matching
 					 * the 'address'. NULL if the page
 					 * table hasn't been allocated.
@@ -378,16 +372,11 @@ struct fault_env {
 					 * page table to avoid allocation from
 					 * atomic context.
 					 */
-	/*
-	 * These entries are required when handling speculative page fault.
-	 * This way the page handling is done using consistent field values.
-	 */
-	unsigned long vma_flags;
-	pgprot_t vma_page_prot;
+	unsigned long vma_flags;	/* Cached VMA flags */
+	pgprot_t vma_page_prot;		/* Cached VMA page protection */
 #ifdef CONFIG_SPECULATIVE_PAGE_FAULT
-	unsigned int sequence;
+	unsigned int sequence;		/* VMA sequence count */
 	pmd_t orig_pmd;			/* value of PMD at the time of fault */
-	pte_t orig_pte;                 /* Value of PTE at the time of fault */
 #endif
 };
 
@@ -404,7 +393,7 @@ struct vm_operations_struct {
 	int (*fault)(struct vm_area_struct *vma, struct vm_fault *vmf);
 	int (*pmd_fault)(struct vm_area_struct *, unsigned long address,
 						pmd_t *, unsigned int flags);
-	void (*map_pages)(struct fault_env *fe,
+	void (*map_pages)(struct vm_fault *vmf,
 			pgoff_t start_pgoff, pgoff_t end_pgoff);
 
 	/* notification that a previously read-only page is about to become
@@ -698,7 +687,7 @@ static inline pte_t maybe_mkwrite(pte_t pte, unsigned long vma_flags)
 	return pte;
 }
 
-int alloc_set_pte(struct fault_env *fe, struct mem_cgroup *memcg,
+int alloc_set_pte(struct vm_fault *vmf, struct mem_cgroup *memcg,
 		struct page *page);
 #endif
 
@@ -2307,7 +2296,7 @@ extern void truncate_inode_pages_final(struct address_space *);
 
 /* generic vm_area_ops exported for stackable file systems */
 extern int filemap_fault(struct vm_area_struct *, struct vm_fault *);
-extern void filemap_map_pages(struct fault_env *fe,
+extern void filemap_map_pages(struct vm_fault *vmf,
 		pgoff_t start_pgoff, pgoff_t end_pgoff);
 extern int filemap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf);
 
